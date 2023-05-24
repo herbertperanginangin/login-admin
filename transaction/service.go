@@ -6,6 +6,8 @@ type service struct {
 
 type Service interface {
 	CreateTransaction(input CreateTransactionInput) (Transaksi, error)
+	GetAllTransactions() ([]Transaksi, error)
+	UpdateStatus(ID int) (Transaksi, error)
 }
 
 func NewService(repository Repository) *service {
@@ -25,4 +27,20 @@ func (s *service) CreateTransaction(input CreateTransactionInput) (Transaksi, er
 	}
 
 	return newTransaction, nil
+}
+
+func (s *service) GetAllTransactions() ([]Transaksi, error) {
+	transactions, err := s.repository.FindAll()
+	if err != nil {
+		return transactions, err
+	}
+
+	return transactions, nil
+}
+
+func (s *service) UpdateStatus(ID int) (Transaksi, error) {
+	transaksi, _ := s.repository.FindByID(ID)
+	transaksi.Status = "Success"
+	newTransaksi, err := s.repository.Update(transaksi)
+	return newTransaksi, err
 }

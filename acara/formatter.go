@@ -1,6 +1,9 @@
 package acara
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 type AcaraResponse struct {
 	ID            int       `json:"id"`
@@ -15,9 +18,9 @@ func FormatAcara(ka Acara) AcaraResponse {
 	return AcaraResponse{
 		ID:            ka.ID,
 		Nama_acara:    ka.Nama_acara,
-		Harga:         ka.Harga,
+		Harga:         strconv.Itoa(ka.Harga),
 		Tanggal_acara: ka.Tanggal_acara,
 		Deskripsi:     ka.Deskripsi,
-		Img_url:       ka.Img_url,
+		Img_url:       ka.ImgURL,
 	}
 }

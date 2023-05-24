@@ -1,33 +1,30 @@
-{{define "content"}}
-   <h1 class="h3 mb-4 text-gray-800">User page</h1>
-   <div class="col-lg-10">
-      <div class="card mb-4 py-3 border-left-primary ">    
-         <div class=" mb-4">
-            <div class="card-body">
-               <h3 class="h5 mb-4 text-gray-800">Administrator</h3>
-               <form action="/users" method="POST">
-                  <div class="form-group">
-                        <label for="name">Name</label>
-                        <input type="text" name="name" placeholder="Enter name" required class="form-control" value="{{ .Name }}">
-                  </div>
+{{ define "content" }}
+<h2 class="mb-4">List of User</h2>
 
-                  <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" name="email" placeholder="Enter email" required class="form-control" value="{{ .Email }}">
-                  </div>
 
-                  <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" name="password" placeholder="Enter password" required class="form-control">
-                  </div>
-
-                  <div>
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                  </div>
-               </form>
-            </div>
-         </div>
-      </div>
-   </div>
-
-{{end}}
+<div class="card mb-4">
+    <div class="card-body">
+        <table class="table mb-0">
+            <thead class="thead-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                 
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .users }}
+                <tr>
+                   
+                    <td>{{ .Nama }}</td>
+                    <td>{{ .Email }}</td>
+                    <td>{{ .Role }}</td>
+                    
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{ end }}

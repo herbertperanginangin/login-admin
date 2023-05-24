@@ -5,6 +5,9 @@ import "gorm.io/gorm"
 type Repository interface {
 	FindAll() ([]Acara, error)
 	FindByID(ID int) (Acara, error)
+	Save(acara Acara) (Acara, error)
+	Update(acara Acara) (Acara, error)
+	Delete(acara Acara) (Acara, error)
 }
 
 type repository struct {
@@ -36,4 +39,28 @@ func (r *repository) FindByID(ID int) (Acara, error) {
 	}
 
 	return acara, nil
+}
+
+func (r *repository) Save(acara Acara) (Acara, error) {
+	err := r.db.Create(&acara).Error
+	if err != nil {
+		return acara, err
+	}
+
+	return acara, nil
+}
+
+func (r *repository) Update(acara Acara) (Acara, error) {
+	err := r.db.Save(&acara).Error
+
+	if err != nil {
+		return acara, err
+	}
+
+	return acara, nil
+}
+
+func (r *repository) Delete(acara Acara) (Acara, error) {
+	err := r.db.Delete(&acara).Error
+	return acara, err
 }

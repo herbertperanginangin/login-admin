@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"umiEvient/acara"
 	"umiEvient/auth"
@@ -47,13 +48,21 @@ func main() {
 	transaksiHandler := handler.NewTransactionHandler(transaksiService)
 
 	// handler web
-	userWebHandler := webHandler.NewUserHandler()
-	dashboardWebHandler := webHandler.NewDashboardHandler()
-	acaraWebHandler := webHandler.NewacaraHandler()
-	transaksiwebHandler := webHandler.Newtransaksi_handler()
+	userWebHandler := webHandler.NewUserHandler(userService)
+	acaraWebHandler := webHandler.NewacaraHandler(acaraService)
+	transaksiwebHandler := webHandler.Newtransaksi_handler(transaksiService)
+	sessionWebHandler := webHandler.NewSessionHandler(userService)
 
 	router := gin.Default()
-	router.Use(cors.Default())
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// cookie
 	cookieStore := cookie.NewStore([]byte(auth.SECRET_KEY))
@@ -61,6 +70,7 @@ func main() {
 
 	router.HTMLRender = loadTemplates("./web/templates")
 
+	router.Static("/images", "./images")
 	router.Static("/css", "./web/assets/css")
 	router.Static("/js", "./web/assets/js")
 	router.Static("/webfonts", "./web/assets/webfonts")
@@ -74,12 +84,19 @@ func main() {
 	api.POST("/transaksi", authMiddleware(authService, userService), transaksiHandler.CreateTransaction)
 
 	// routing
-	router.GET("/users", userWebHandler.Index)
-	router.GET("/dashboard", dashboardWebHandler.Index)
-	router.GET("/acara", acaraWebHandler.Index)
-	router.GET("/acara/new", acaraWebHandler.New)
-	router.GET("/acara/edit", acaraWebHandler.Edit)
-	router.GET("/transaksi", transaksiwebHandler.Index)
+	router.GET("/users", authAdminMiddleware(), userWebHandler.Index)
+	router.GET("/acara", authAdminMiddleware(), acaraWebHandler.Index)
+	router.POST("/acara/create", authAdminMiddleware(), acaraWebHandler.Create)
+	router.GET("/acara/new", authAdminMiddleware(), acaraWebHandler.New)
+	router.GET("/acara/edit/:id", authAdminMiddleware(), acaraWebHandler.Edit)
+	router.POST("/acara/update/:id", authAdminMiddleware(), acaraWebHandler.Update)
+	router.GET("/acara/delete/:id", authAdminMiddleware(), acaraWebHandler.Delete)
+	router.GET("/transaksi", authAdminMiddleware(), transaksiwebHandler.Index)
+	router.GET("/transaksi/status/:id", authAdminMiddleware(), transaksiwebHandler.Status)
+
+	router.GET("/login", sessionWebHandler.New)
+	router.POST("/session", sessionWebHandler.Create)
+	router.GET("/logout", sessionWebHandler.Destroy)
 
 	router.Run(":9090")
 
@@ -113,7 +130,7 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 			return
 		}
 
-		userID, ok := claim["user_id"].(float64)
+		userID, ok := claim["id"].(float64)
 		if !ok {
 			response := gin.H{"error": "Invalid user ID in token"}
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
@@ -131,18 +148,18 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 	}
 }
 
-// func authAdminMiddleware() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		session := sessions.Default(c)
+func authAdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
 
-// 		userIDSession := session.Get("userID")
+		userIDSession := session.Get("userID")
 
-// 		if userIDSession == nil {
-// 			c.Redirect(http.StatusFound, "/login")
-// 			return
-// 		}
-// 	}
-// }
+		if userIDSession == nil {
+			c.Redirect(http.StatusFound, "/login")
+			return
+		}
+	}
+}
 
 func loadTemplates(templatesDir string) multitemplate.Renderer {
 	r := multitemplate.NewRenderer()

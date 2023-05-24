@@ -38,8 +38,13 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
+	var data auth.TokenUserInput
+	data.ID = newUser.ID
+	data.Email = newUser.Email
+	data.Nama = newUser.Nama
+
 	// token,  err jwt service generate token
-	token, err := h.authService.GenerateToken(newUser.ID)
+	token, err := h.authService.GenerateToken(data)
 	if err != nil {
 		response := helper.APIRESPONSE("Register account failed", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
@@ -78,8 +83,13 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
+	var data auth.TokenUserInput
+	data.ID = loggedinUser.ID
+	data.Email = loggedinUser.Email
+	data.Nama = loggedinUser.Nama
+
 	// token,  err jwt service generate token
-	token, err := h.authService.GenerateToken(loggedinUser.ID)
+	token, err := h.authService.GenerateToken(data)
 	if err != nil {
 		response := helper.APIRESPONSE("Login failed", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
